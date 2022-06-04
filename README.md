@@ -9,8 +9,8 @@
 
 ### 1、数据校验
 flask-siwadoc 站在巨人肩膀上，数据校验利用`pydantic`强大的数据验证功能，支持请求**查询参数**和**请求体参数**的数据校验及转换功能。因此本项目同时依赖于pydantic。
-### 2、文档自动生成
-文档生成只需要简单初始化一个`siwa=SiwaDoc(app)`,利用装饰器 `siwa.doc()`修饰flask的视图函数，即可将该视图函数加入openapi的接口文档规范中。
+### 2、接口文档自动生成
+接口文档生成只需要简单初始化一个`siwa=SiwaDoc(app)`,利用装饰器 `siwa.doc()`修饰flask的视图函数，即可将该视图函数加入openapi的接口文档规范中。
 ### 3、ui切换
 flask-siwadoc内置了`redoc`和`swagger`两种UI 界面，通过参数`/docs/?ui=swagger`切换
 ### 4、文档支持分组与标签
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
 运行后，访问 [http://127.0.0.1:5000/docs](http://127.0.0.1:5000/docs) 就可以看到openapi的文档页面
 
-![xx](./screnshots/20220604200547.png)
+![20220605014223.png](./screnshots/20220605014223.png)
 
 
 
@@ -117,7 +117,7 @@ def login(body: LoginModel):
 
 对于POST请求，请求体是基于application/json 类型， 会自动转换成LoginModel类型的对象，就可以用静态语言一样，通过点选的方式调出属性，例如 `body.username`
 
-![20220604202321.png](./screnshots/20220604202321.png)
+![20220605014442.png](./screnshots/20220605014442.png)
 
 ### example4: 指定返回体 resp
 
@@ -126,16 +126,16 @@ class UserModel(BaseModel):
     id: int
     username: str
 
-@app.route("/users/<int(min=1):user_id>", methods=["GET"])
+@app.route("/users/1", methods=["GET"])
 @siwa.doc(resp=UserModel)
-def users(user_id):
+def users():
     """
     user detail
     """
-    return {"username": "siwa", "id": user_id}
+    return {"username": "siwa", "id": 1}
 ```
 
-![20220604202644.png](./screnshots/20220604202644.png)
+![20220605012328.png](./screnshots/20220605012328.png)
 
 
 ### example5: 指定标签分类 tags
@@ -147,6 +147,30 @@ def users(user_id):
 ```
 指定`tags`参数，tags参数是一个列表，一个接口可支持多个标签。
 
+
+### example6：路径参数也支持文档化
+
+针对参数，除了请求查询参数和请求体参数外，url路径中的参数，例如`/users/<int(min=1):user_id>` 同样支持，对于路径参数转api文档参数，不需要开发者做额外的处理，flask-siwadoc内部已经做了处理。
+
+```python
+class QueryModel(BaseModel):
+    gender: str
+
+
+class UpdatePasswordModel(BaseModel):
+    password: str
+
+
+@app.route("/users/<int(min=1):user_id>", methods=["POST"])
+@siwa.doc(query=QueryModel, body=UpdatePasswordModel, resp=UserModel)
+def update_password(user_id):
+    """
+    update password
+    """
+    return {"username": "siwa", "id": user_id}
+```
+
+![20220605014105.png](./screnshots/20220605014105.png)
 
 完整示例可参考 [example.py](./example/__init__.py)
 

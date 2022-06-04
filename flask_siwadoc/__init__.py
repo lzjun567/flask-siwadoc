@@ -14,7 +14,7 @@ from .error import ValidationError
 
 __all__ = ["SiwaDoc", "ValidationError"]
 
-__version__ = "0.0.1"
+__version__ = "0.0.3"
 
 
 # 参考连接
@@ -52,7 +52,9 @@ class SiwaDoc:
         # /docs
         @blueprint.route(self.config.endpoint)
         def doc_html():
-            ui = request.args.get("ui") or self.config.ui
+            ui = request.args.get("ui")
+            if not ui or ui not in self.config._support_ui:
+                ui = self.config.ui
             ui_file = f'{ui}.html'
             return render_template(ui_file, spec_url=self.config.filename)
 
