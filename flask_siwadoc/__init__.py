@@ -14,7 +14,7 @@ from .error import ValidationError
 
 __all__ = ["SiwaDoc", "ValidationError"]
 
-__version__ = "0.0.3"
+__version__ = "0.0.5"
 
 
 # 参考连接

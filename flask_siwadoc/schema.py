@@ -96,7 +96,6 @@ def string_schema(*args, **kwargs):
     for prop in ['length', 'maxLength', 'minLength', 'maxlength']:
         if prop in kwargs:
             schema["minLength"] = kwargs[prop]
-    print("schema:", schema)
     return schema
 
 
