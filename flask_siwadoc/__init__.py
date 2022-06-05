@@ -14,7 +14,7 @@ from .error import ValidationError
 
 __all__ = ["SiwaDoc", "ValidationError"]
 
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 
 
 # 参考连接
@@ -112,7 +112,7 @@ class SiwaDoc:
                 body_model = body_in_kwargs or body
                 if body_model is not None:
                     try:
-                        b = body_model(**request.get_json())
+                        b = body_model(**(request.get_json(silent=True) or {}))
                     except pydantic.error_wrappers.ValidationError as e:
                         raise ValidationError(e)
                 if query_in_kwargs:
