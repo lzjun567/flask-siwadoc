@@ -26,7 +26,7 @@ class _Config:
         self.title = 'api'
         self.version = 'latest'
         self.ui = 'redoc'
-        self._support_ui = {'redoc', 'swagger'}
+        self._support_ui = {'redoc', 'swagger', 'rapidoc'}
         self._support_mode = {'normal', 'greedy', 'strict'}
 
 
