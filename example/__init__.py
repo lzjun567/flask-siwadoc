@@ -9,6 +9,10 @@ app = Flask(__name__)
 siwa = SiwaDoc(app)
 
 
+class UpdatePasswordModel(BaseModel):
+    password: str
+
+
 # or
 # siwa.init_app(app)
 
@@ -18,31 +22,14 @@ def hello():
     return "hello siwadoc"
 
 
-@app.route("/login", methods=["POST"])
-@siwa.doc(body=LoginModel, resp=UserModel, tags=['auth'])
-def login(body: LoginModel):
+@app.route("/admin/login", methods=["POST"])
+@siwa.doc(body=LoginModel, resp=UserModel, tags=['auth'], group='admin')
+def admin_login(body: LoginModel):
     return {"username": body.username, "id": 1}
 
 
-@app.route("/users/1", methods=["GET"])
-@siwa.doc(resp=UserModel, tags=["user"])
-def users():
-    """
-    user detail
-    """
-    return {"username": "siwa", "id": 1}
-
-
-class QueryModel(BaseModel):
-    gender: str
-
-
-class UpdatePasswordModel(BaseModel):
-    password: str
-
-
-@app.route("/users/<int(min=1):user_id>", methods=["POST"])
-@siwa.doc(query=QueryModel, body=UpdatePasswordModel, resp=UserModel, tags=['auth'])
+@app.route("/admin/users/<int(min=1):user_id>", methods=["POST"])
+@siwa.doc(query=QueryModel, body=UpdatePasswordModel, resp=UserModel, tags=['auth'], group="admin")
 def update_password(user_id):
     """
     update password
@@ -50,14 +37,28 @@ def update_password(user_id):
     return {"username": "siwa", "id": user_id}
 
 
-#
+@app.route("/users/1", methods=["GET"])
+@siwa.doc(resp=UserModel, tags=["user"], group="user")
+def users():
+    """
+    user detail
+    """
+    return {"username": "siwa", "id": 1}
+
+
 @app.route("/users", methods=["GET"])
-@siwa.doc(query=QueryModel, tags=["user"])
+@siwa.doc(query=QueryModel, tags=["user"], group="user")
 def users_list():
     """
     user list
     """
     return [{"username": "siwa", "id": 1}]
+
+
+@app.route("/user/login", methods=["POST"])
+@siwa.doc(body=LoginModel, resp=UserModel, tags=['auth'], group='user')
+def user_login(body: LoginModel):
+    return {"username": body.username, "id": 1}
 
 
 if __name__ == '__main__':

@@ -1,4 +1,5 @@
-from typing import Dict
+from collections import defaultdict
+from typing import Dict, List
 
 from flask import Flask
 
@@ -17,6 +18,7 @@ def generate_spec(openapi_version, title, version, app: Flask, models: Dict) -> 
     """
     routes: Dict[str:Dict] = dict()
     tags: Dict[str:Dict] = dict()
+    groups: Dict[str:List] = defaultdict(list)
     for rule in app.url_map.iter_rules():
         # 视图函数
         func = app.view_functions[rule.endpoint]
@@ -30,6 +32,9 @@ def generate_spec(openapi_version, title, version, app: Flask, models: Dict) -> 
             if method in ['HEAD', 'OPTIONS']:
                 continue
             if hasattr(func, 'tags'):
+                if hasattr(func, 'group'):
+                    func.tags = [func.group + '/' + tag for tag in func.tags]
+                    groups[func.group].extend(func.tags)
                 tags.update({tag: {"name": tag} for tag in func.tags})
 
             summary, description = utils.get_func_doc(func)
@@ -113,6 +118,7 @@ def generate_spec(openapi_version, title, version, app: Flask, models: Dict) -> 
             'version': version,
         },
         'tags': list(tags.values()),
+        'x-tagGroups': [{"name": k, "tags": list(set(v))} for k, v in groups.items()],
         'paths': {
             **routes
         },

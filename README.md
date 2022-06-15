@@ -1,8 +1,11 @@
 # flask-siwadoc
 
-**flask-siwadoc** 是一个兼具**数据校验**和openapi(swagger)**文档自动生成**的项目
+**flask-siwadoc**：基于flask的接口文档自动生成库，告别手写接口文档
+
 
 ## 特性
+
+**flask-siwadoc**是一个兼具**数据校验**和openapi(swagger)**文档自动生成**的项目
 
 ### 0、零配置
 
@@ -20,7 +23,7 @@ flask-siwadoc 站在巨人肩膀上，数据校验利用`pydantic`强大的数�
 
 flask-siwadoc内置了`redoc`、`swagger`、`rapidoc`等多种UI界面，通过参数`/docs/?ui=xxx`切换
 
-### 4、文档支持分组与标签
+### 4、同时支持标签与分组
 
 ## 安装
 
@@ -157,7 +160,22 @@ def users():
 
 指定`tags`参数，tags参数是一个列表，一个接口可支持多个标签。
 
-### example6：路径参数也支持文档化
+
+### example6: 指定分组  group
+
+除了可以指定标签外，我们还可以指定分组
+
+```python
+@app.route("/admin/login", methods=["POST"])
+@siwa.doc(body=LoginModel, resp=UserModel, tags=['auth'], group='admin')
+def admin_login(body: LoginModel):
+    return {"username": body.username, "id": 1}
+```
+
+![20220615180504.png](./screnshots/20220615180504.png)
+
+
+### example7：路径参数也支持文档化
 
 针对参数，除了请求查询参数和请求体参数外，url路径中的参数，例如`/users/<int(min=1):user_id>` 同样支持，对于路径参数转api文档参数，不需要开发者做额外的处理，flask-siwadoc内部已经做了处理。
 

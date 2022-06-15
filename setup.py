@@ -11,7 +11,7 @@ import io
 CURRENT_FOLDER = Path(__file__).resolve().parent
 REQUIREMENTS_PATH = CURRENT_FOLDER / "requirements.txt"
 
-VERSION = '0.0.6'
+VERSION = '0.0.7'
 
 with io.open("README.md", encoding='utf-8') as f:
     long_description = f.read()

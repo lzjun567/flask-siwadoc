@@ -9,19 +9,11 @@ from pydantic import BaseModel
 
 from . import utils, openapi, error
 from .config import config
-
 from .error import ValidationError
 
 __all__ = ["SiwaDoc", "ValidationError"]
 
-__version__ = "0.0.6"
-
-
-# 参考连接
-# https://github.com/turner-townsend/flask-pydantic-spec
-# https://apispec.readthedocs.io/en/latest/
-# https://github.com/kemingy/flaskerk/blob/master/flaskerk/view.py
-# https://fastapi.tiangolo.com/advanced/additional-responses/
+__version__ = "0.0.7"
 
 
 class SiwaDoc:
@@ -88,9 +80,10 @@ class SiwaDoc:
             body: Optional[Type[BaseModel]] = None,
             resp=None,
             x=[],
-            tags=[]):
+            tags=[],
+            group=None):
         """
-        本装饰器同时兼具文档生成和请求数据校验功能
+        装饰器同时兼具文档生成和请求数据校验功能
         """
 
         def decorate_validate(func):
@@ -139,6 +132,8 @@ class SiwaDoc:
 
             if tags:
                 wrapper.tags = tags
+            if group:
+                wrapper.group = group
             wrapper._decorated = True  # 标记判断改函数是否加入openapi
             return wrapper
 
