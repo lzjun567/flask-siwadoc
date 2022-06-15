@@ -13,7 +13,7 @@ from .error import ValidationError
 
 __all__ = ["SiwaDoc", "ValidationError"]
 
-__version__ = "0.0.8"
+__version__ = "0.0.9"
 
 
 class SiwaDoc:

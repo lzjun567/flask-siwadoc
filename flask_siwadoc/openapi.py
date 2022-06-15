@@ -24,7 +24,6 @@ def generate_spec(openapi_version, title, version, app: Flask, models: Dict) -> 
         func = app.view_functions[rule.endpoint]
 
         path, parameters = utils.parse_route_to_path_params(str(rule))
-        print(path)
         # 只有被siwadoc装饰了函数才加入openapi
         if not getattr(func, '_decorated', None):
             continue
@@ -38,8 +37,7 @@ def generate_spec(openapi_version, title, version, app: Flask, models: Dict) -> 
                 func.group = ''
 
             func_group = getattr(func, 'group', "")
-            func_tags = [func_group + ('/' if tag != 'default' else "") + tag for tag in
-                         getattr(func, 'tags', ['default'])]
+            func_tags = [func_group + "/" + tag for tag in getattr(func, 'tags', ['default'])]
 
             groups[func_group].extend(func_tags)
             tags.update({tag: {"name": tag} for tag in func_tags})
