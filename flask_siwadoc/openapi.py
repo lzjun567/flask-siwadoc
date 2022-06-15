@@ -24,6 +24,7 @@ def generate_spec(openapi_version, title, version, app: Flask, models: Dict) -> 
         func = app.view_functions[rule.endpoint]
 
         path, parameters = utils.parse_route_to_path_params(str(rule))
+        print(path)
         # 只有被siwadoc装饰了函数才加入openapi
         if not getattr(func, '_decorated', None):
             continue
@@ -31,18 +32,24 @@ def generate_spec(openapi_version, title, version, app: Flask, models: Dict) -> 
         for method in rule.methods:
             if method in ['HEAD', 'OPTIONS']:
                 continue
-            if hasattr(func, 'tags'):
-                if hasattr(func, 'group'):
-                    func.tags = [func.group + '/' + tag for tag in func.tags]
-                    groups[func.group].extend(func.tags)
-                tags.update({tag: {"name": tag} for tag in func.tags})
+            if not hasattr(func, 'tags'):
+                func.tags = ['default']
+            if not hasattr(func, 'group'):
+                func.group = ''
+
+            func_group = getattr(func, 'group', "")
+            func_tags = [func_group + ('/' if tag != 'default' else "") + tag for tag in
+                         getattr(func, 'tags', ['default'])]
+
+            groups[func_group].extend(func_tags)
+            tags.update({tag: {"name": tag} for tag in func_tags})
 
             summary, description = utils.get_func_doc(func)
             spec = {
                 'summary': summary or func.__name__.capitalize(),
                 'description': description or '',
                 'operationID': func.__name__ + '__' + method.lower(),
-                'tags': getattr(func, 'tags', []),
+                'tags': func_tags,
             }
 
             if hasattr(func, 'body'):
