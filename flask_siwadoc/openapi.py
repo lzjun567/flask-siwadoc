@@ -37,7 +37,7 @@ def generate_spec(openapi_version, title, version, app: Flask, models: Dict) -> 
                 func.group = ''
 
             func_group = getattr(func, 'group', "")
-            func_tags = [func_group + "/" + tag for tag in getattr(func, 'tags', ['default'])]
+            func_tags = [tag for tag in getattr(func, 'tags', ['default'])]
 
             groups[func_group].extend(func_tags)
             tags.update({tag: {"name": tag} for tag in func_tags})
