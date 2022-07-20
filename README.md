@@ -203,12 +203,10 @@ def update_password(user_id):
 
 ### UI切换
 
-文档默认使用`redoc`进行渲染，你可以通过指定参数`ui=swaggerui`显式文档。
+文档默认使用`redoc`进行渲染，你可以通过指定参数`ui=swagger`切换成 `swagger` 渲染文档。
 
 ```python
-http: // 127.0
-.0
-.1: 5000 / docs /?ui = swagger
+http://127.0.0.1:5000/docs/?ui=swagger
 ```
 
 ![20220604203420.png](./screnshots/20220604203420.png)
