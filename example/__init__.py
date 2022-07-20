@@ -23,8 +23,12 @@ def hello():
 
 
 @app.route("/admin/login", methods=["POST"])
-@siwa.doc(body=LoginModel, resp=UserModel, tags=['auth'], group='admin')
+@siwa.doc(body=LoginModel, resp=UserModel, tags=['auth'], group='admin', summary="用户登录")
 def admin_login(body: LoginModel):
+    """
+    这是一段接口的描述文字
+    hello world
+    """
     return {"username": body.username, "id": 1}
 
 

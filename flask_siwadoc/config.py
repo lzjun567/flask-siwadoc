@@ -1,6 +1,3 @@
-from typing import Dict
-
-
 class _Config:
     """
     :ivar endpoint: url path for docs
@@ -16,7 +13,7 @@ class _Config:
     """
 
     def __init__(self):
-        self.name = 'docs'
+        self.name = 'siwadoc'
         self.endpoint = '/docs/'
         self.url_prefix = None
         self.template_folder = None

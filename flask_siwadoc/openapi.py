@@ -9,11 +9,11 @@ from . import utils
 def generate_spec(openapi_version, title, version, app: Flask, models: Dict) -> Dict:
     """
     生成openapi json
-    :param openapi_version:  openapi版本号
-    :param title:   文档标题
-    :param version:  文档版本
+    :param openapi_version:
+    :param title:
+    :param version:
     :param app:  flask app
-    :param models:  Pydantic model 字典集合
+    :param models:  Pydantic model
     :return:
     """
     routes: Dict[str:Dict] = dict()
@@ -42,17 +42,15 @@ def generate_spec(openapi_version, title, version, app: Flask, models: Dict) -> 
 
             groups[func_group].extend(func_tags)
             tags.update({tag: {"name": tag} for tag in func_tags})
-
-            summary, description = utils.get_func_doc(func)
-            spec = {
-                'summary': summary or func.__name__.capitalize(),
-                'description': description or '',
+            operation = {
+                'summary': utils.get_operation_summary(func),
+                'description': utils.get_operation_description(func),
                 'operationID': func.__name__ + '__' + method.lower(),
                 'tags': func_tags,
             }
 
             if hasattr(func, 'body'):
-                spec['requestBody'] = {
+                operation['requestBody'] = {
                     'content': {
                         'application/json': {
                             'schema': {
@@ -71,20 +69,20 @@ def generate_spec(openapi_version, title, version, app: Flask, models: Dict) -> 
                         '$ref': f'#/components/schemas/{func.query}',
                     }
                 })
-            spec['parameters'] = parameters
+            operation['parameters'] = parameters
 
-            spec['responses'] = {}
+            operation['responses'] = {}
             has_2xx = False
             if hasattr(func, 'x'):
                 for code, msg in func.x.items():
                     if code.startswith('2'):
                         has_2xx = True
-                    spec['responses'][code] = {
+                    operation['responses'][code] = {
                         'description': msg,
                     }
 
             if hasattr(func, 'resp'):
-                spec['responses']['200'] = {
+                operation['responses']['200'] = {
                     'description': 'Successful Response',
                     'content': {
                         'application/json': {
@@ -95,10 +93,10 @@ def generate_spec(openapi_version, title, version, app: Flask, models: Dict) -> 
                     },
                 }
             elif not has_2xx:
-                spec['responses']['200'] = {'description': 'Successful Response'}
+                operation['responses']['200'] = {'description': 'Successful Response'}
 
             if any([hasattr(func, schema) for schema in ('query', 'body')]):
-                spec['responses']['400'] = {
+                operation['responses']['400'] = {
                     'description': 'Validation Error',
                     'content': {
                         'application/json': {
@@ -108,7 +106,7 @@ def generate_spec(openapi_version, title, version, app: Flask, models: Dict) -> 
                         }
                     },
                 }
-            routes.setdefault(path, {})[method.lower()] = spec
+            routes.setdefault(path, {})[method.lower()] = operation
 
     definitions = {}
     for _, schema in models.items():

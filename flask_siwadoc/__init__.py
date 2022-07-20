@@ -81,7 +81,10 @@ class SiwaDoc:
             resp=None,
             x=[],
             tags=[],
-            group=None):
+            group=None,
+            summary=None,
+            description=None,
+            ):
         """
         装饰器同时兼具文档生成和请求数据校验功能
         """
@@ -134,6 +137,8 @@ class SiwaDoc:
                 wrapper.tags = tags
             if group:
                 wrapper.group = group
+            wrapper.summary = summary
+            wrapper.description = description
             wrapper._decorated = True  # 标记判断改函数是否加入openapi
             return wrapper
 

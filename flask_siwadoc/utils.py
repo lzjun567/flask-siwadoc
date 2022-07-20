@@ -1,5 +1,5 @@
 import inspect
-from typing import Type, Tuple, List
+from typing import Type, List
 
 from pydantic import BaseModel
 from werkzeug.datastructures import MultiDict
@@ -68,20 +68,22 @@ def parse_route_to_path_params(route: str) -> (str, List):
     return path, parameters
 
 
-def get_func_doc(func) -> (str, str):
+def get_operation_summary(func) -> str:
     """
-    获取视图函数的文档注释，summary与description之间用 \n\n 分隔
-    :param func: flask 视图函数
-    :return: (summary,description)
+    return a summary for operation in the method
+    :param func:flask view function
+    :return:str
     """
-    doc = inspect.getdoc(func)
-    if not doc:
-        return None, None
 
-    doc = doc.split('\n\n', 1)
-    if len(doc) == 1:
-        return doc[0], None
-    return doc
+    return func.summary or func.__name__.replace("_", " ").title()
+
+
+def get_operation_description(func) -> str:
+    """
+    :param func: flask view function
+    :return:str
+    """
+    return func.description or (inspect.getdoc(func) or "").split("\f")[0]
 
 
 def get_path_param_schema(converter: str, *args, **kwargs) -> schema.BaseSchema:
