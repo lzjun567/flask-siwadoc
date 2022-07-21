@@ -23,7 +23,7 @@ def generate_spec(openapi_version, title, version, app: Flask, models: Dict) -> 
         # 视图函数
         func = app.view_functions[rule.endpoint]
 
-        path, parameters = utils.parse_route_to_path_params(str(rule))
+        path, parameters = utils.parse_path_params(str(rule))
         # 只有被siwadoc装饰了函数才加入openapi
         if not getattr(func, '_decorated', None):
             continue
@@ -59,16 +59,12 @@ def generate_spec(openapi_version, title, version, app: Flask, models: Dict) -> 
                         }
                     }
                 }
-
             if hasattr(func, 'query'):
-                parameters.append({
-                    'name': func.query,
-                    'in': 'query',
-                    'required': False,
-                    'schema': {
-                        '$ref': f'#/components/schemas/{func.query}',
-                    }
-                })
+                parameters.extend(utils.parse_other_params('query', models[func.query]))
+            if hasattr(func, 'header'):
+                parameters.extend(utils.parse_other_params('header', models[func.header]))
+            if hasattr(func, 'cookie'):
+                parameters.extend(utils.parse_other_params('cookie', models[func.cookie]))
             operation['parameters'] = parameters
 
             operation['responses'] = {}

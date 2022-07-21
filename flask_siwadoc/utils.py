@@ -1,7 +1,8 @@
 import inspect
-from typing import Type, List
+from typing import Type, List, Mapping, Any
 
 from pydantic import BaseModel
+from pydantic.typing import Literal
 from werkzeug.datastructures import MultiDict
 from werkzeug.routing import parse_rule, parse_converter_args
 
@@ -21,7 +22,7 @@ def convert_query_params(query_prams: MultiDict, model: Type[BaseModel]) -> dict
     }
 
 
-def parse_route_to_path_params(route: str) -> (str, List):
+def parse_path_params(route: str) -> (str, List):
     """
     将flask route url 转换成 openapi的path规范
     :param route: /hello/<int(min=2):age>
@@ -66,6 +67,24 @@ def parse_route_to_path_params(route: str) -> (str, List):
         })
     path = ''.join(subs)
     return path, parameters
+
+
+def parse_other_params(
+        location: Literal["query", "header", "cookie"],
+        model: Mapping[str, Any],
+) -> List[Mapping[str, Any]]:
+    params = []
+    for name, _schema in model["properties"].items():
+        params.append(
+            {
+                "name": name,
+                "in": location,
+                "schema": _schema,
+                "required": name in model.get("required", []),
+                "description": _schema.get("description", ""),
+            }
+        )
+    return params
 
 
 def get_operation_summary(func) -> str:

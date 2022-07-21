@@ -1,19 +1,13 @@
 # flask-siwadoc
 
-**flask-siwadoc**：基于flask的接口文档自动生成库，告别手写接口文档
-
+**flask-siwadoc**是一个兼具**数据校验**和openapi(swagger)**文档自动生成**的项目
 
 ## 特性
 
-**flask-siwadoc**是一个兼具**数据校验**和openapi(swagger)**文档自动生成**的项目
-
-### 0、零配置
-
-接入flask-siwadoc无需任何配置
 
 ### 1、数据校验
 
-flask-siwadoc 站在巨人肩膀上，数据校验利用`pydantic`强大的数据验证功能，支持请求**查询参数**和**请求体参数**的数据校验及转换功能。因此本项目同时依赖于pydantic。
+数据校验基于`pydantic`，请求参数支持 `query`,`path`, `header`,`cookie`,`requestbody`，完全支持openapi规范所一定的5种参数方式。
 
 ### 2、接口文档自动生成
 
@@ -40,11 +34,11 @@ from flask import Flask
 from flask_siwadoc import SiwaDoc
 
 app = Flask(__name__)
-
 siwa = SiwaDoc(app)
 
 
-# or
+# or use factory pattern
+# siwa = SiwaDoc()
 # siwa.init_app(app)
 
 @app.route("/hello", methods=["GET"])
@@ -61,59 +55,69 @@ if __name__ == '__main__':
 
 ![20220605014223.png](./screnshots/20220605014223.png)
 
-### example 2：指定查询参数 query
+### example 2：指定 query 参数
+
+对于数查询接口，`GET`请求需如果指定`query`查询参数，只需要定义一个继承了BaseModel的自定义类，即可实现数据校验及自动转换。
 
 ```python
 from pydantic import BaseModel, Field
+
+USERS = [
+    {"username": "siwa1", "id": 1},
+    {"username": "siwa2", "id": 2},
+    {"username": "siwa3", "id": 3},
+]
 
 
 class QueryModel(BaseModel):
     page: int = Field(default=1, title="current page number")
     size: int = Field(default=20, title="size of page", ge=10, le=100)
+    keyword: str = None
 
 
 @app.route("/users", methods=["GET"])
-@siwa.doc(query=QueryModel, tags=['user'])
-def users_list():
+@siwa.doc(query=QueryModel, tags=["user"], group="user")
+def users_list(query: QueryModel):
     """
     user list
     """
-    return [{"username": "siwa", "id": 1}]
+    return {"data": USERS[:query.size]}
 ```
 
-对于数查询接口，`GET`请求需如果有查询参数，得益于pydantic强大的类型功能，我们只需要一个继承了BaseModel的自定义类，即可实现数据校验及转换。
+将`query`变量作为视图函数的参数，flask-siwadoc 会自动将QueryModel实例对象赋值给`query`变量，因为这里给query指定了类型声明，因此通过IDE可以很方便的调出实例属性。
 
-如何在视图函数中使用该`query`这个对象呢？ 有两种方式
+![20220721192111.png](./screnshots/20220721192111.png)
 
-方式一：
+### example3: 指定header参数
 
 ```python
-@app.route("/users", methods=["GET"])
-@siwa.doc(query=QueryModel, tags=["user"])
-def hello():
-    print(request.query.keyword)
-    return "hello"
+class TokenModel(BaseModel):
+    token: str
+
+
+@app.route("/me", methods=["GET"])
+@siwa.doc(header=TokenModel, tags=['auth'], group='admin')
+def param_in_header():
+    token = request.headers.get("token")
+    print("token:", token)
+    return {"token": token}
 ```
 
-flask-siwadoc 将QueryModel的实例对象`query`绑定到了flask的request对象上，不过对开发者来说使用并不友好，你没法知道它的类型是什么，意味着IDE无法用`.`的方式调出该实例的属性。
+![](./screnshots/20220721192749.png)
 
-方式二：（推荐方式）
+### example4:指定cookie参数
 
 ```python
-@app.route("/users", methods=["GET"])
-@siwa.doc(query=QueryModel, tags=["user"])
-def hello(query: QueryModel):
-    print(query.keyword)
-    return "hello"
+@app.route("/cookie", methods=["GET"])
+@siwa.doc(cookie=TokenModel, resp=UserModel, tags=['auth'], group='admin')
+def param_in_cookie():
+    token = request.cookies.get("token")
+    print("token:", token)
+    return {"token": token}
 ```
+![](./screnshots/20220721193013.png)
 
-将`query`变量作为视图函数的参数，flask-siwadoc 会自动将QueryModel实例对象赋值给`query`变量，因为我们这里给query指定了类型声明，因此通过IDE可以很方便的调出实例属性。
-
-下面的example3中的body参数原理也是类似的。
-
-![20220604201906.png](./screnshots/20220604201906.png)
-
-### example3 :指定请求体 body
+### example5 :指定请求体 body
 
 ```python
 class LoginModel(BaseModel):
@@ -121,17 +125,20 @@ class LoginModel(BaseModel):
     password: str
 
 
-@app.route("/login", methods=["POST"])
-@siwa.doc(body=LoginModel)
-def login(body: LoginModel):
-    return {"username": body.username, "id": 1}
+@app.route("/user/login", methods=["POST"])
+@siwa.doc(body=LoginModel, tags=['auth'], group='admin')
+def user_login(body: LoginModel):
+    return {
+        "username": body.username,
+        "password": body.password,
+        "id": 1}
 ```
 
 对于POST请求，请求体是基于application/json 类型， 会自动转换成LoginModel类型的对象，就可以用静态语言一样，通过点选的方式调出属性，例如 `body.username`
 
 ![20220605014442.png](./screnshots/20220605014442.png)
 
-### example4: 指定返回体 resp
+### example6: 指定返回体 resp
 
 ```python
 class UserModel(BaseModel):
@@ -150,7 +157,7 @@ def users():
 
 ![20220605012328.png](./screnshots/20220605012328.png)
 
-### example5: 指定标签分类 tags
+### example7: 指定标签分类 tags
 
 项目中如果接口太多，我们可以对接口根据业务划分不同的模块标签来分类管理。
 
@@ -161,7 +168,7 @@ def users():
 指定`tags`参数，tags参数是一个列表，一个接口可支持多个标签。
 
 
-### example6: 指定分组  group
+### example8: 指定分组  group
 
 除了可以指定标签外，我们还可以指定分组
 
@@ -175,7 +182,7 @@ def admin_login(body: LoginModel):
 ![20220615180504.png](./screnshots/20220615180504.png)
 
 
-### example7：路径参数也支持文档化
+### example9：路径参数
 
 针对参数，除了请求查询参数和请求体参数外，url路径中的参数，例如`/users/<int(min=1):user_id>` 同样支持，对于路径参数转api文档参数，不需要开发者做额外的处理，flask-siwadoc内部已经做了处理。
 
@@ -196,8 +203,20 @@ def update_password(user_id):
     """
     return {"username": "siwa", "id": user_id}
 ```
-
 ![20220605014105.png](./screnshots/20220605014105.png)
+
+
+### example10：指定接口summary和description
+
+在`doc`装饰器装可以指定接口的名称（summary）以及描述（description），如果不指定，siwadoc会读取视图函数名作为该接口的名字，函数的文档注释作为描述。
+
+```python
+@app.route("/home", methods=["GET"])
+@siwa.doc(summary="主页", description="这是一段描述")
+def home():
+    return "this is home"
+```
+![](./screnshots/20220721193849.png)
 
 完整示例可参考 [example.py](./example/__init__.py)
 

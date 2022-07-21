@@ -77,6 +77,8 @@ class SiwaDoc:
 
     def doc(self,
             query: Optional[Type[BaseModel]] = None,
+            header: Optional[Type[BaseModel]] = None,
+            cookie: Optional[Type[BaseModel]] = None,
             body: Optional[Type[BaseModel]] = None,
             resp=None,
             x=[],
@@ -92,42 +94,39 @@ class SiwaDoc:
         def decorate_validate(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
-                q, b = None, None
+                query_data, body_data = None, None
                 # 注解参数
                 query_in_kwargs = func.__annotations__.get("query")
+                body_in_kwargs = func.__annotations__.get("body")
                 query_model = query_in_kwargs or query
+                body_model = body_in_kwargs or body
 
                 if query_model:
                     query_params = utils.convert_query_params(request.args, query_model)
                     try:
-                        q = query_model(**query_params)
+                        query_data = query_model(**query_params)
                     except pydantic.error_wrappers.ValidationError as e:
                         raise ValidationError(e)
-                body_in_kwargs = func.__annotations__.get("body")
 
-                body_model = body_in_kwargs or body
                 if body_model is not None:
                     try:
-                        b = body_model(**(request.get_json(silent=True) or {}))
+                        body_data = body_model(**(request.get_json(silent=True) or {}))
                     except pydantic.error_wrappers.ValidationError as e:
                         raise ValidationError(e)
                 if query_in_kwargs:
-                    kwargs["query"] = q
+                    kwargs["query"] = query_data
                 if body_in_kwargs:
-                    kwargs["body"] = b
-
-                request.query = q
-                request.body = b
+                    kwargs["body"] = body_data
 
                 return func(*args, **kwargs)
 
-            for schema, name in zip(
-                    (query, body, resp), ('query', 'body', 'resp')
+            for model, name in zip(
+                    (query, header, cookie, body, resp), ('query', 'header', 'cookie', 'body', 'resp')
             ):
-                if schema:
-                    assert issubclass(schema, BaseModel)
-                    self.models[schema.__name__] = schema.schema()
-                    setattr(wrapper, name, schema.__name__)
+                if model:
+                    assert issubclass(model, BaseModel)
+                    self.models[model.__name__] = model.schema()
+                    setattr(wrapper, name, model.__name__)
 
             code_msg = {}
             if code_msg:
