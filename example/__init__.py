@@ -56,7 +56,7 @@ def users_list():
     """
     user list
     """
-    return [{"username": "siwa", "id": 1}]
+    return {"data": [{"username": "siwa", "id": 1}]}
 
 
 @app.route("/user/login", methods=["POST"])
