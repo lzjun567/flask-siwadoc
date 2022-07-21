@@ -7,7 +7,7 @@
 
 ### 1、数据校验
 
-数据校验基于`pydantic`，请求参数支持 `query`,`path`, `header`,`cookie`,`requestbody`，完全支持openapi规范所一定的5种参数方式。
+数据校验基于`pydantic`，请求参数支持 `query`,`path`, `header`,`cookie`,`body`，完全支持openapi规范所定义的5种参数方式。
 
 ### 2、接口文档自动生成
 
@@ -15,7 +15,7 @@
 
 ### 3、ui切换
 
-flask-siwadoc内置了`redoc`、`swagger`、`rapidoc`等多种UI界面，通过参数`/docs/?ui=xxx`切换
+flask-siwadoc内置了`redoc`、`swagger`、`rapidoc`等多种UI界面，可通过参数`?ui=xxx`切换
 
 ### 4、同时支持标签与分组
 
@@ -260,7 +260,7 @@ password
 field required (type=value_error.missing)
 ```
 
-我们需要通过使用flask的 errorhandler() 装饰函数来注册`ValidationError`错误，这样错误异常就可以被`validate_error`函数捕获，开发者可以给前端直接一个友好的错误响应体
+使用flask的 `errorhandler()` 装饰函数来注册`ValidationError`错误，这样错误异常就可以被`validate_error`函数捕获，开发者可以给前端直接一个友好的错误响应体
 
 ```python
 @app.errorhandler(ValidationError)

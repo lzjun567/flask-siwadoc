@@ -1,12 +1,12 @@
 import os
 from functools import wraps
-from typing import Optional, Type, Dict
+from typing import Optional, Type, Dict, Union, Any
 
 import pydantic
 from flask import Blueprint, request, Flask, render_template
 from flask import jsonify
 from pydantic import BaseModel
-
+from pydantic.typing import Literal
 from . import utils, openapi, error
 from .config import config
 from .error import ValidationError
@@ -15,19 +15,33 @@ __all__ = ["SiwaDoc", "ValidationError"]
 
 __version__ = "0.1.2"
 
+SUPPORTED_UI = ('redoc', 'swagger', 'rapidoc')
+
 
 class SiwaDoc:
-    def __init__(self, app: Flask = None):
+    def __init__(self,
+                 app: Flask = None,
+                 title: str = "SiwaDocAPI",
+                 description: str = "",
+                 version="latest",
+                 doc_url: Optional[str] = "/docs",
+                 openapi_url: Optional[str] = "/openapi.json",
+                 ui: Literal["redoc", "swagger", "rapidoc"] = "swagger"):
         self.app = app
-        self._spec = None
-        self.config = None
+        self._openapi = None
+        self.title = title
+        self.description = description
+        self.version = version
+        self.doc_url = doc_url
+        self.openapi_url = openapi_url
+        self.openapi_version = "3.0.2"
+        self.ui = ui
         self.models: Dict[str: Dict] = {}
         if app is not None:
             self.init_app(app)
 
     def init_app(self, app: Flask):
         self.app = app
-        self.config = config
         self._register_doc_blueprint()
 
     def _register_doc_blueprint(self):
@@ -35,45 +49,34 @@ class SiwaDoc:
         注册文档蓝图
         """
         template_folder = os.path.join(os.path.dirname(__file__), "templates")
-        blueprint = Blueprint(self.config.name,
-                              __name__,
-                              url_prefix=self.config.url_prefix,
-                              template_folder=template_folder,
-                              )
+        siwa_bp = Blueprint("siwadoc",
+                            __name__,
+                            template_folder=template_folder,
+                            )
 
-        # /docs
-        @blueprint.route(self.config.endpoint)
+        @siwa_bp.route(self.doc_url)
         def doc_html():
-            ui = request.args.get("ui")
-            if not ui or ui not in self.config._support_ui:
-                ui = self.config.ui
+            ui = request.args.get("ui") or self.ui
+            assert ui in SUPPORTED_UI, f"ui only support with {SUPPORTED_UI}"
             ui_file = f'{ui}.html'
-            return render_template(ui_file, spec_url=self.config.filename)
+            return render_template(ui_file, spec_url=self.openapi_url)
 
-        # /docs/openapi.json
-        @blueprint.route(f'{self.config.endpoint}{self.config.filename}')
+        @siwa_bp.route(f'{self.openapi_url}')
         def doc_json():
-            return jsonify(self.spec)
+            return jsonify(self.openapi)
 
-        self.app.register_blueprint(blueprint)
+        self.app.register_blueprint(siwa_bp)
 
     @property
-    def spec(self):
-        if not self._spec:
-            self._spec = self._generate_spec()
-        return self._spec
-
-    def _generate_spec(self) -> Dict:
-        """
-        生成openapi规范文档
-        """
-        data = openapi.generate_spec(openapi_version=self.config.openapi_veresion,
-                                     title=self.config.title,
-                                     version=self.config.version,
-                                     app=self.app,
-                                     models=self.models)
-        self._spec = data
-        return data
+    def openapi(self):
+        if not self._openapi:
+            self._openapi = openapi.generate_openapi(openapi_version=self.openapi_version,
+                                                     title=self.title,
+                                                     version=self.version,
+                                                     description=self.description,
+                                                     app=self.app,
+                                                     models=self.models)
+        return self._openapi
 
     def doc(self,
             query: Optional[Type[BaseModel]] = None,

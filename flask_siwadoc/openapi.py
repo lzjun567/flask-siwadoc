@@ -1,21 +1,27 @@
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Any
 
 from flask import Flask
 
 from . import utils
 
 
-def generate_spec(openapi_version, title, version, app: Flask, models: Dict) -> Dict:
+def generate_openapi(title: str,
+                     version: str,
+                     openapi_version: str,
+                     app: Flask,
+                     models: Dict[str, Dict],
+                     description: str = None) -> Dict[str, Any]:
     """
-    生成openapi json
-    :param openapi_version:
     :param title:
     :param version:
-    :param app:  flask app
-    :param models:  Pydantic model
+    :param openapi_version:
+    :param app:
+    :param models:
+    :param description:
     :return:
     """
+
     routes: Dict[str:Dict] = dict()
     tags: Dict[str:Dict] = dict()
     groups: Dict[str:List] = defaultdict(list)
@@ -110,13 +116,15 @@ def generate_spec(openapi_version, title, version, app: Flask, models: Dict) -> 
             for key, value in schema['definitions'].items():
                 definitions[key] = value
             del schema['definitions']
-
+    info = {
+        'title': title,
+        'version': version,
+    }
+    if description:
+        info["description"] = description
     data = {
         'openapi': openapi_version,
-        'info': {
-            'title': title,
-            'version': version,
-        },
+        'info': info,
         'tags': list(tags.values()),
         'x-tagGroups': [{"name": k, "tags": list(set(v))} for k, v in groups.items()],
         'paths': {

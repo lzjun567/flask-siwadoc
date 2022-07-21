@@ -6,13 +6,14 @@ from flask_siwadoc import SiwaDoc
 
 app = Flask(__name__)
 
-siwa = SiwaDoc(app)
+siwa = SiwaDoc(app, title="xxx", description="yyy")
 
 
 # or use factory pattern
 # siwa = SiwaDoc()
 # siwa.init_app(app)
 
+print(app.url_map)
 
 class UpdatePasswordModel(BaseModel):
     password: str
