@@ -1,14 +1,14 @@
 import os
 from functools import wraps
-from typing import Optional, Type, Dict, Union, Any
+from typing import Optional, Type, Dict
 
 import pydantic
 from flask import Blueprint, request, Flask, render_template
 from flask import jsonify
 from pydantic import BaseModel
 from pydantic.typing import Literal
+
 from . import utils, openapi, error
-from .config import config
 from .error import ValidationError
 
 __all__ = ["SiwaDoc", "ValidationError"]
