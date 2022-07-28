@@ -36,7 +36,7 @@ class SiwaDoc:
         self.openapi_url = openapi_url
         self.openapi_version = "3.0.2"
         self.ui = ui
-        self.models: Dict[str: Dict] = {}
+        self.models: Dict[str, Dict] = {}
         if app is not None:
             self.init_app(app)
 
