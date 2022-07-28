@@ -13,7 +13,6 @@ siwa = SiwaDoc(app, title="xxx", description="yyy")
 # siwa = SiwaDoc()
 # siwa.init_app(app)
 
-print(app.url_map)
 
 class UpdatePasswordModel(BaseModel):
     password: str

@@ -1,6 +1,6 @@
 import os
 from functools import wraps
-from typing import Optional, Type, Dict, Union, Any
+from typing import Optional, Type, Dict
 
 import pydantic
 from flask import Blueprint, request, Flask, render_template
@@ -8,12 +8,11 @@ from flask import jsonify
 from pydantic import BaseModel
 from pydantic.typing import Literal
 from . import utils, openapi, error
-from .config import config
 from .error import ValidationError
 
 __all__ = ["SiwaDoc", "ValidationError"]
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 SUPPORTED_UI = ('redoc', 'swagger', 'rapidoc')
 
