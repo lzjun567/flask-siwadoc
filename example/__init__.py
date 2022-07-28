@@ -6,13 +6,12 @@ from flask_siwadoc import SiwaDoc
 
 app = Flask(__name__)
 
-siwa = SiwaDoc(app, title="xxx", description="yyy")
+siwa = SiwaDoc(app, title="siwadocapi", description="一个自动生成openapi文档的库")
 
 
-# or use factory pattern
-# siwa = SiwaDoc()
+# 或者使用工厂模式
+# siwa = SiwaDoc(title="siwadocapi", description="一个自动生成openapi文档的库")
 # siwa.init_app(app)
-
 
 class UpdatePasswordModel(BaseModel):
     password: str
@@ -29,6 +28,27 @@ USERS = [
 @siwa.doc()
 def hello():
     return "hello siwadoc"
+
+
+@app.route("/users", methods=["GET"])
+@siwa.doc(query=QueryModel, resp=UserModel)
+def users_list(query: QueryModel):
+    """
+    user list
+    """
+    return {"data": USERS[:query.size]}
+
+
+class TokenModel(BaseModel):
+    token: str
+
+
+@app.route("/me", methods=["GET"])
+@siwa.doc(header=TokenModel, tags=['auth'], group='admin')
+def param_in_header():
+    token = request.headers.get("token")
+    print("token:", token)
+    return {"token": token}
 
 
 @app.route("/home", methods=["GET"])
@@ -57,7 +77,7 @@ def update_password(user_id):
 
 
 @app.route("/users/<int:user_id>", methods=["GET"])
-@siwa.doc(resp=UserModel, tags=["user"], group="user")
+@siwa.doc(resp=UserModel, tags=["user"])
 def users(user_id):
     """
     user detail
@@ -69,17 +89,8 @@ def users(user_id):
         return {}
 
 
-@app.route("/users", methods=["GET"])
-@siwa.doc(query=QueryModel, tags=["user"], group="user")
-def users_list(query: QueryModel):
-    """
-    user list
-    """
-    return {"data": USERS[:query.size]}
-
-
 @app.route("/user/login", methods=["POST"])
-@siwa.doc(body=LoginModel, tags=['auth'], group='admin')
+@siwa.doc(body=LoginModel, tags=['auth'])
 def user_login(body: LoginModel):
     return {
         "username": body.username,
@@ -87,24 +98,16 @@ def user_login(body: LoginModel):
         "id": 1}
 
 
-class TokenModel(BaseModel):
-    token: str
-
-
-@app.route("/me", methods=["GET"])
-@siwa.doc(header=TokenModel, tags=['auth'], group='admin')
-def param_in_header():
-    token = request.headers.get("token")
-    print("token:", token)
-    return {"token": token}
+class CookieModel(BaseModel):
+    foo: str
 
 
 @app.route("/cookie", methods=["GET"])
-@siwa.doc(cookie=TokenModel, resp=UserModel, tags=['auth'], group='admin')
+@siwa.doc(cookie=CookieModel, tags=['auth'])
 def param_in_cookie():
-    token = request.cookies.get("token")
-    print("token:", token)
-    return {"token": token}
+    foo = request.cookies.get("foo")
+    print("foo:", foo)
+    return {"foo": foo}
 
 
 if __name__ == '__main__':

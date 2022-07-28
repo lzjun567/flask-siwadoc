@@ -7,6 +7,7 @@ from flask import Blueprint, request, Flask, render_template
 from flask import jsonify
 from pydantic import BaseModel
 from pydantic.typing import Literal
+
 from . import utils, openapi, error
 from .error import ValidationError
 
