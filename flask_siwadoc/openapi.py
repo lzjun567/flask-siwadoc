@@ -19,7 +19,6 @@ def generate_openapi(title: str,
     :param app:
     :param models:
     :param description:
-    :return:
     """
 
     routes: Dict[str:Dict] = dict()
@@ -28,14 +27,16 @@ def generate_openapi(title: str,
     for rule in app.url_map.iter_rules():
         # 视图函数
         func = app.view_functions[rule.endpoint]
-
         path, parameters = utils.parse_path_params(str(rule))
-        # 只有被siwadoc装饰了函数才加入openapi
-        if not getattr(func, '_decorated', None):
-            continue
 
         for method in rule.methods:
             if method in ['HEAD', 'OPTIONS']:
+                continue
+            if getattr(func, "view_class", None):
+                cls = getattr(func, "view_class")
+                func = getattr(cls, method.lower(), None)
+            # 只有被siwadoc装饰了函数才加入openapi
+            if not getattr(func, '_decorated', None):
                 continue
             if not hasattr(func, 'tags'):
                 func.tags = ['default']

@@ -1,4 +1,5 @@
 from flask import Flask, request
+from flask.views import MethodView
 from pydantic import BaseModel
 
 from example.dto import LoginModel, UserModel, QueryModel
@@ -109,6 +110,17 @@ def param_in_cookie():
     print("foo:", foo)
     return {"foo": foo}
 
+
+class TestView(MethodView):
+    @siwa.doc()
+    def get(self):
+        """
+        method view description
+        """
+        return "hello"
+
+
+app.add_url_rule('/counter', view_func=TestView.as_view('counter'))
 
 if __name__ == '__main__':
     app.run()

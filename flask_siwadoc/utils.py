@@ -1,6 +1,7 @@
 import inspect
 from typing import Type, List, Mapping, Any
 
+from flask.views import View, MethodView
 from pydantic import BaseModel
 from pydantic.typing import Literal
 from werkzeug.datastructures import MultiDict
@@ -93,8 +94,7 @@ def get_operation_summary(func) -> str:
     :param func:flask view function
     :return:str
     """
-
-    return func.summary or func.__name__.replace("_", " ").title()
+    return func.summary or func.__qualname__.replace(".", " ").replace("_", " ").title()
 
 
 def get_operation_description(func) -> str:
