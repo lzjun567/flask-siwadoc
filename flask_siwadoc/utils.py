@@ -1,7 +1,6 @@
 import inspect
 from typing import Type, List, Mapping, Any
 
-from flask.views import View, MethodView
 from pydantic import BaseModel
 from pydantic.typing import Literal
 from werkzeug.datastructures import MultiDict
