@@ -1,4 +1,6 @@
 # -*- encoding: UTF-8 -*-
+import re
+from os import path
 from pathlib import Path
 from typing import Generator
 
@@ -11,7 +13,20 @@ import io
 CURRENT_FOLDER = Path(__file__).resolve().parent
 REQUIREMENTS_PATH = CURRENT_FOLDER / "requirements.txt"
 
-VERSION = '0.1.4'
+version_file = path.join(
+    path.dirname(__file__),
+    'flask_siwadoc',
+    '__init__.py'
+)
+with open(version_file, encoding="utf-8") as fp:
+    m = re.search(
+        r"^__version__ = ['\"]([^'\"]*)['\"]",
+        fp.read(),
+        re.M
+    )
+    version = m.groups(1)[0]
+
+VERSION = version
 
 with io.open("README.md", encoding='utf-8') as f:
     long_description = f.read()
