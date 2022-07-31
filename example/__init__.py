@@ -119,6 +119,13 @@ class TestView(MethodView):
         """
         return "hello"
 
+    @siwa.doc(cookie=CookieModel, tags=['auth'])
+    def post(self):
+        """
+        this is a post method
+        """
+        return "post"
+
 
 app.add_url_rule('/counter', view_func=TestView.as_view('counter'))
 

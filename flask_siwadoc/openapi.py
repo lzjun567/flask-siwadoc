@@ -26,14 +26,14 @@ def generate_openapi(title: str,
     groups: Dict[str:List] = defaultdict(list)
     for rule in app.url_map.iter_rules():
         # 视图函数
-        func = app.view_functions[rule.endpoint]
+        func = old_func = app.view_functions[rule.endpoint]
         path, parameters = utils.parse_path_params(str(rule))
-
-        for method in rule.methods:
+        methods = rule.methods
+        for method in methods:
             if method in ['HEAD', 'OPTIONS']:
                 continue
-            if getattr(func, "view_class", None):
-                cls = getattr(func, "view_class")
+            if getattr(old_func, "view_class", None):
+                cls = getattr(old_func, "view_class")
                 func = getattr(cls, method.lower(), None)
             # 只有被siwadoc装饰了函数才加入openapi
             if not getattr(func, '_decorated', None):

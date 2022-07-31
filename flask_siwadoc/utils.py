@@ -94,6 +94,7 @@ def get_operation_summary(func) -> str:
     :param func:flask view function
     :return:str
     """
+    # print(func)
     return func.summary or func.__qualname__.replace(".", " ").replace("_", " ").title()
 
 
