@@ -13,7 +13,7 @@ from .error import ValidationError
 
 __all__ = ["SiwaDoc", "ValidationError"]
 
-__version__ = "0.1.6"
+__version__ = "0.1.7"
 
 SUPPORTED_UI = ('redoc', 'swagger', 'rapidoc')
 
