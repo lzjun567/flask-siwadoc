@@ -1,2 +1,2 @@
-flask==2.1.0
+flask
 pydantic==1.9.0
