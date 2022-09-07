@@ -1,3 +1,4 @@
+import copy
 from collections import defaultdict
 from typing import Dict, List, Any
 
@@ -66,6 +67,7 @@ def generate_openapi(title: str,
                         }
                     }
                 }
+            parameters = copy.deepcopy(parameters)
             if hasattr(func, 'query'):
                 parameters.extend(utils.parse_other_params('query', models[func.query]))
             if hasattr(func, 'header'):

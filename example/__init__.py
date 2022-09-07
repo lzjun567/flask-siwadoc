@@ -112,7 +112,7 @@ def param_in_cookie():
 
 
 class TestView(MethodView):
-    @siwa.doc()
+    @siwa.doc(query=QueryModel)
     def get(self):
         """
         method view description
