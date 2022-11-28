@@ -13,7 +13,7 @@ from .error import ValidationError
 
 __all__ = ["SiwaDoc", "ValidationError"]
 
-__version__ = "0.1.9"
+__version__ = "0.2.0"
 
 SUPPORTED_UI = ('redoc', 'swagger', 'rapidoc')
 
@@ -113,7 +113,7 @@ class SiwaDoc:
 
                 if body_model is not None:
                     try:
-                        body_data = body_model(**(request.get_json(silent=True) or {}))
+                        body_data = body_model(**(request.get_json(force=True, silent=True) or {}))
                     except pydantic.error_wrappers.ValidationError as e:
                         raise ValidationError(e)
                 if query_in_kwargs:
