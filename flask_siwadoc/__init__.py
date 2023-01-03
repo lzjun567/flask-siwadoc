@@ -83,6 +83,7 @@ class SiwaDoc:
             header: Optional[Type[BaseModel]] = None,
             cookie: Optional[Type[BaseModel]] = None,
             body: Optional[Type[BaseModel]] = None,
+            form: Optional[Type[BaseModel]] = None,
             resp=None,
             x=[],
             tags=[],
@@ -97,12 +98,14 @@ class SiwaDoc:
         def decorate_validate(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
-                query_data, body_data = None, None
+                query_data, body_data, form_data = None, None, None
                 # 注解参数
                 query_in_kwargs = func.__annotations__.get("query")
                 body_in_kwargs = func.__annotations__.get("body")
+                form_in_kwargs = func.__annotations__.get("form")
                 query_model = query_in_kwargs or query
                 body_model = body_in_kwargs or body
+                form_model = form_in_kwargs or form
 
                 if query_model:
                     query_params = utils.convert_query_params(request.args, query_model)
@@ -116,10 +119,19 @@ class SiwaDoc:
                         body_data = body_model(**(request.get_json(force=True, silent=True) or {}))
                     except pydantic.error_wrappers.ValidationError as e:
                         raise ValidationError(e)
+
+                if form_model is not None:
+                    try:
+                        form_data = form_model(**(request.form.to_dict() or {}))
+                    except pydantic.error_wrappers.ValidationError as e:
+                        raise ValidationError(e)
+
                 if query_in_kwargs:
                     kwargs["query"] = query_data
                 if body_in_kwargs:
                     kwargs["body"] = body_data
+                if form_in_kwargs:
+                    kwargs["form"] = form_data
 
                 return func(*args, **kwargs)
 
