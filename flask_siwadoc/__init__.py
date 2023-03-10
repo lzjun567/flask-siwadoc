@@ -1,7 +1,6 @@
 import os
-import typing
 from functools import wraps
-from typing import Optional, Type, Dict, get_type_hints, List
+from typing import Optional, Type, Dict
 
 import pydantic
 from flask import Blueprint, request, Flask, render_template
@@ -11,7 +10,6 @@ from pydantic.typing import Literal
 
 from . import utils, openapi, error
 from .error import ValidationError
-from werkzeug.datastructures import FileStorage
 from pydantic import ValidationError as PydanticError
 from pydantic.errors import MissingError, ListMaxLengthError
 from pydantic.error_wrappers import ErrorWrapper
@@ -142,17 +140,17 @@ class SiwaDoc:
                         request_files = request.files
                         files_data = {}
                         for file_field, file_conf in files.items():
-                            required_ = file_conf.get('required', False)
-                            is_single_file = file_conf.get('single', True)
+                            is_required_ = file_conf.get('required', False)
+                            is_single_file_ = file_conf.get('single', True)
                             file_list = request_files.getlist(file_field)
-                            if required_ and not file_list:
+                            if is_required_ and not file_list:
                                 raise ValidationError(PydanticError(errors=[ErrorWrapper(exc=MissingError(), loc=(file_field,))], model=form_model))
 
-                            if file_list and is_single_file and len(file_list) > 1:
+                            if file_list and is_single_file_ and len(file_list) > 1:
                                 raise ValidationError(PydanticError(errors=[ErrorWrapper(exc=ListMaxLengthError(limit_value=1), loc=(file_field,))], model=form_model))
 
                             if file_list:
-                                files_data[file_field] = file_list[0] if is_single_file else file_list
+                                files_data[file_field] = file_list[0] if is_single_file_ else file_list
 
                 if query_in_kwargs:
                     kwargs["query"] = query_data
@@ -176,15 +174,15 @@ class SiwaDoc:
                         # 将files中定义的字段填充到form的schema中
                         assert isinstance(files, dict)
                         for field, conf in files.items():
-                            single = conf.get('single', True)
-                            if single:
+                            is_single_file = conf.get('single', True)
+                            if is_single_file:
                                 file_schema = {'title': field, 'type': 'string', 'format': 'binary'}
                             else:
                                 file_schema = {'title': field, 'type': 'array', 'items': {'type': 'string', 'format': 'binary'}}
                             schema['properties'][field] = file_schema
 
-                            required = conf.get('required', False)
-                            if required:
+                            is_required = conf.get('required', False)
+                            if is_required:
                                 required_fields = schema.get('required', [])
                                 required_fields.append(field)
                                 schema['required'] = required_fields
