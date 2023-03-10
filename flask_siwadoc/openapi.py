@@ -112,7 +112,7 @@ def generate_openapi(title: str,
             elif not has_2xx:
                 operation['responses']['200'] = {'description': 'Successful Response'}
 
-            if any([hasattr(func, schema) for schema in ('query', 'body', 'form', 'formdata')]):
+            if any([hasattr(func, schema) for schema in ('query', 'body', 'form')]):
                 operation['responses']['400'] = {
                     'description': 'Validation Error',
                     'content': {
