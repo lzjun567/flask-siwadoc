@@ -102,9 +102,9 @@ class SiwaDoc:
         装饰器同时兼具文档生成和请求数据校验功能
         """
 
-        # 当formdata中只有文件时，可以用@siwa.doc(form=BaseModel, files={...}). 这时需要将BaseModel动态创建一个子类，保证schema不冲突。
-        if form == BaseModel:
-            form = type(f'BaseModel-{uuid.uuid1()}', (BaseModel,), {})
+        # 当formdata中有文件时，将文件参数添加到form schema中。需要将form动态创建一个子类，保证schema不冲突。
+        if files and form:
+            form = type(f'{form.__name__}-{uuid.uuid1()}', (form,), {})
 
         def decorate_validate(func):
             @wraps(func)
@@ -117,10 +117,7 @@ class SiwaDoc:
                 files_in_kwargs = func.__annotations__.get("files")
                 query_model = query_in_kwargs or query
                 body_model = body_in_kwargs or body
-                if form_in_kwargs == BaseModel:
-                    form_model = form
-                else:
-                    form_model = form_in_kwargs or form
+                form_model = form_in_kwargs or form
 
                 if query_model:
                     query_params = utils.convert_query_params(request.args, query_model)
