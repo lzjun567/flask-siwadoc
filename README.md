@@ -206,7 +206,7 @@ def test_form_with_files(form: UserModel, files: dict):
 2. `@siwa.doc(form=UserModel, files={'file1': {"required": True, "single": False}, 'file2': {"required": False, "single": True}})` ：`doc`装饰器中接收名为`form`的对象、名为`files`的字典。`form`对象用于在文档中展示参数列表，`files`字典用于定义文件参数列表以及文件参数配置（`required`配置此文件参数是否必传，默认`False`；`single`配置此文件参数接收单文件还是文件列表，默认`True`）
 3. `test_form_with_files(form: UserModel, files: dict)` 视图函数中定义名字为`form`的参数，方便开发者直接通过`form`对象获取基本数据类型的参数值; `files`字典用于获取文件对象
 
-![20230310094400.png](./screnshots/20230310094400.png)
+![20230310094500.png](./screnshots/20230310094500.png)
 
 #### 情形三：请求体中只包含文件对象参数时，例如：
 ```python
@@ -222,7 +222,7 @@ def test_form_only_files(files: dict):
 1. `@siwa.doc(form=BaseModel, files={'file1': {"required": True, "single": False}, 'file2': {"required": False, "single": True}})` ：`doc`装饰器中接收名为`form`的对象、名为`files`的字典。`form`对象指定为基类`BaseModel`，`files`同情形二
 2. `test_form_only_files(files: dict)` 视图函数中定义名字`files`的字典，用于获取文件对象
 
-![20230310094500.png](./screnshots/20230310094500.png)
+![20230310094400.png](./screnshots/20230310094400.png)
 
 ### example7: 指定返回体 responses
 
