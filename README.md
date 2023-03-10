@@ -10,7 +10,7 @@
 
 ### 2、支持多种参数指定
 
-可以将请求参数放置在 `query`、`path`、`header`、`cookie`、`body`5种不同的地方，完全支持openapi规范所定义的5种参数方式。
+可以将请求参数放置在 `query`、`path`、`header`、`cookie`、`body(json、formdata)`5种不同的地方，完全支持openapi规范所定义的5种参数方式。
 
 ### 3、参数校验与自动转换
 
@@ -167,7 +167,64 @@ def user_login(body: LoginModel):
 
 ![20220722104304.png](./screnshots/20220722104304.png)
 
-### example6: 指定返回体 responses
+### example6: 使用formdata请求
+
+example5中使用`json`作为请求体，当请求文件等复杂数据类型时，需要使用`formdata`
+
+#### 情形一：没有文件等复杂数据类型时，例如
+```python
+class UserModel(BaseModel):
+    id: int
+    username: str
+
+
+@app.post('/form')
+@siwa.doc(form=UserModel)
+def test_form(form: UserModel):
+    print(form.id)
+    print(form.username)
+    return form.username
+```
+1. 定义一个继承自`pydantic.BaseModel`的子类：`UserModel`
+2. `@siwa.doc(form=UserModel)` ：`doc`装饰器中接收名为`form`的对象，用于在文档中展示参数列表
+3. `test_form(form: UserModel)` 视图函数中定义名字为`form`的参数，方便开发者直接通过`form`对象获取参数值
+
+![20230310094000.png](./screnshots/20230310094000.png)
+
+#### 情形二：请求体中包含基础数据类型数据，也包含文件对象参数时，例如：
+```python
+
+@app.post('/form_with_files')
+@siwa.doc(form=UserModel, files={'file1': {"required": True, "single": False}, 'file2': {"required": False, "single": True}})
+def test_form_with_files(form: UserModel, files: dict):
+    print(form.id)
+    print(form.username)
+    print(files.keys())
+    return form.username
+```
+1. 定义一个继承自`pydantic.BaseModel`的子类：`UserModel`
+2. `@siwa.doc(form=UserModel, files={'file1': {"required": True, "single": False}, 'file2': {"required": False, "single": True}})` ：`doc`装饰器中接收名为`form`的对象、名为`files`的字典。`form`对象用于在文档中展示参数列表，`files`字典用于定义文件参数列表以及文件参数配置（`required`配置此文件参数是否必传，默认`False`；`single`配置此文件参数接收单文件还是文件列表，默认`True`）
+3. `test_form_with_files(form: UserModel, files: dict)` 视图函数中定义名字为`form`的参数，方便开发者直接通过`form`对象获取基本数据类型的参数值; `files`字典用于获取文件对象
+
+![20230310094400.png](./screnshots/20230310094400.png)
+
+#### 情形三：请求体中只包含文件对象参数时，例如：
+```python
+
+@app.post('/form_only_files')
+@siwa.doc(form=BaseModel, files={'file1': {"required": True, "single": False}, 'file2': {"required": False, "single": True}})
+def test_form_only_files(files: dict):
+    print(files.keys())
+
+    return 'success'
+```
+
+1. `@siwa.doc(form=BaseModel, files={'file1': {"required": True, "single": False}, 'file2': {"required": False, "single": True}})` ：`doc`装饰器中接收名为`form`的对象、名为`files`的字典。`form`对象指定为基类`BaseModel`，`files`同情形二
+2. `test_form_only_files(files: dict)` 视图函数中定义名字`files`的字典，用于获取文件对象
+
+![20230310094500.png](./screnshots/20230310094500.png)
+
+### example7: 指定返回体 responses
 
 需要告诉客户端接口返回的字段时，指定参数`resp`
 
@@ -191,7 +248,7 @@ def users_list(query: QueryModel):
 
 ![20220722110623.png](./screnshots/20220722110623.png)
 
-### example7: 指定标签分类 tags
+### example8: 指定标签分类 tags
 
 项目中如果接口太多，我们可以对接口根据业务划分不同的模块标签来分类管理。
 
@@ -202,7 +259,7 @@ def users_list(query: QueryModel):
 指定`tags`参数，tags参数是一个列表，一个接口可支持多个标签。
 
 
-### example8: 指定分组  group
+### example9: 指定分组  group
 
 除了可以指定标签外，我们还可以指定分组
 

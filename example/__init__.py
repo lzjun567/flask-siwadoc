@@ -99,6 +99,31 @@ def user_login(body: LoginModel):
         "id": 1}
 
 
+@app.post('/form')
+@siwa.doc(form=UserModel, tags=['form'])
+def test_form(form: UserModel):
+
+    return form.username
+
+
+@app.post('/form_with_files')
+@siwa.doc(form=UserModel, files={'file1': {"required": True, "single": False}, 'file2': {"required": False, "single": True}}, tags=['form'])
+def test_form_with_files(form: UserModel, files: dict):
+
+    print(form.username)
+    print(files.keys())
+
+    return form.username
+
+
+@app.post('/form_only_files')
+@siwa.doc(form=BaseModel, files={'file1': {"required": True, "single": False}, 'file2': {"required": False, "single": True}}, tags=['form'])
+def test_form_only_files(files: dict):
+    print(files.keys())
+
+    return 'success'
+
+
 class CookieModel(BaseModel):
     foo: str
 
