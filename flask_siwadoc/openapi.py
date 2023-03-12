@@ -67,6 +67,18 @@ def generate_openapi(title: str,
                         }
                     }
                 }
+
+            if hasattr(func, 'form'):
+                operation['requestBody'] = {
+                    'content': {
+                        'multipart/form-data': {
+                            'schema': {
+                                '$ref': f'#/components/schemas/{func.form}'
+                            }
+                        }
+                    }
+                }
+
             parameters = copy.deepcopy(parameters)
             if hasattr(func, 'query'):
                 parameters.extend(utils.parse_other_params('query', models[func.query]))
@@ -100,7 +112,7 @@ def generate_openapi(title: str,
             elif not has_2xx:
                 operation['responses']['200'] = {'description': 'Successful Response'}
 
-            if any([hasattr(func, schema) for schema in ('query', 'body')]):
+            if any([hasattr(func, schema) for schema in ('query', 'body', 'form')]):
                 operation['responses']['400'] = {
                     'description': 'Validation Error',
                     'content': {
