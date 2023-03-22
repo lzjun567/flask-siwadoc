@@ -145,14 +145,10 @@ class SiwaDoc:
                             is_single_file_ = file_conf.get('single', True)
                             file_list = request_files.getlist(file_field)
                             if is_required_ and not file_list:
-                                raise ValidationError(
-                                    PydanticError(errors=[ErrorWrapper(exc=MissingError(), loc=(file_field,))],
-                                                  model=form_model))
+                                raise ValidationError(PydanticError(errors=[ErrorWrapper(exc=MissingError(), loc=(file_field,))], model=form_model))
 
                             if file_list and is_single_file_ and len(file_list) > 1:
-                                raise ValidationError(PydanticError(
-                                    errors=[ErrorWrapper(exc=ListMaxLengthError(limit_value=1), loc=(file_field,))],
-                                    model=form_model))
+                                raise ValidationError(PydanticError(errors=[ErrorWrapper(exc=ListMaxLengthError(limit_value=1), loc=(file_field,))], model=form_model))
 
                             if file_list:
                                 files_data[file_field] = file_list[0] if is_single_file_ else file_list
@@ -169,7 +165,7 @@ class SiwaDoc:
                 return func(*args, **kwargs)
 
             for model, name in zip(
-                (query, header, cookie, body, form, resp), ('query', 'header', 'cookie', 'body', 'form', 'resp')
+                    (query, header, cookie, body, form, resp), ('query', 'header', 'cookie', 'body', 'form', 'resp')
             ):
                 if model:
                     assert issubclass(model, BaseModel)
@@ -183,8 +179,7 @@ class SiwaDoc:
                             if is_single_file:
                                 file_schema = {'title': field, 'type': 'string', 'format': 'binary'}
                             else:
-                                file_schema = {'title': field, 'type': 'array',
-                                               'items': {'type': 'string', 'format': 'binary'}}
+                                file_schema = {'title': field, 'type': 'array', 'items': {'type': 'string', 'format': 'binary'}}
                             schema['properties'][field] = file_schema
 
                             is_required = conf.get('required', False)
