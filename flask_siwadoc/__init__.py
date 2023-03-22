@@ -1,9 +1,9 @@
 import os
 from functools import wraps
-from typing import Optional, Type, Dict
+from typing import Optional, Type, Dict, Callable, TypeVar, Any
 
 import pydantic
-from flask import Blueprint, request, Flask, render_template
+from flask import Blueprint, request, Flask, render_template, typing as ft
 from flask import jsonify
 from pydantic import BaseModel
 from pydantic.typing import Literal
@@ -20,6 +20,7 @@ __all__ = ["SiwaDoc", "ValidationError"]
 __version__ = "0.2.0"
 
 SUPPORTED_UI = ('redoc', 'swagger', 'rapidoc')
+T_route = TypeVar("T_route", bound=ft.RouteCallable)
 
 
 class SiwaDoc:
@@ -144,10 +145,14 @@ class SiwaDoc:
                             is_single_file_ = file_conf.get('single', True)
                             file_list = request_files.getlist(file_field)
                             if is_required_ and not file_list:
-                                raise ValidationError(PydanticError(errors=[ErrorWrapper(exc=MissingError(), loc=(file_field,))], model=form_model))
+                                raise ValidationError(
+                                    PydanticError(errors=[ErrorWrapper(exc=MissingError(), loc=(file_field,))],
+                                                  model=form_model))
 
                             if file_list and is_single_file_ and len(file_list) > 1:
-                                raise ValidationError(PydanticError(errors=[ErrorWrapper(exc=ListMaxLengthError(limit_value=1), loc=(file_field,))], model=form_model))
+                                raise ValidationError(PydanticError(
+                                    errors=[ErrorWrapper(exc=ListMaxLengthError(limit_value=1), loc=(file_field,))],
+                                    model=form_model))
 
                             if file_list:
                                 files_data[file_field] = file_list[0] if is_single_file_ else file_list
@@ -164,7 +169,7 @@ class SiwaDoc:
                 return func(*args, **kwargs)
 
             for model, name in zip(
-                    (query, header, cookie, body, form, resp), ('query', 'header', 'cookie', 'body', 'form', 'resp')
+                (query, header, cookie, body, form, resp), ('query', 'header', 'cookie', 'body', 'form', 'resp')
             ):
                 if model:
                     assert issubclass(model, BaseModel)
@@ -178,7 +183,8 @@ class SiwaDoc:
                             if is_single_file:
                                 file_schema = {'title': field, 'type': 'string', 'format': 'binary'}
                             else:
-                                file_schema = {'title': field, 'type': 'array', 'items': {'type': 'string', 'format': 'binary'}}
+                                file_schema = {'title': field, 'type': 'array',
+                                               'items': {'type': 'string', 'format': 'binary'}}
                             schema['properties'][field] = file_schema
 
                             is_required = conf.get('required', False)
@@ -204,3 +210,69 @@ class SiwaDoc:
             return wrapper
 
         return decorate_validate
+
+    def blueprint(self, *args, **kwargs):
+        return SiwaBlueprint(self, *args, **kwargs)
+
+
+class SiwaBlueprint(Blueprint):
+    siwa: SiwaDoc
+    tags = []
+    group = None
+
+    def __init__(self, siwa: SiwaDoc, *args, **kwargs):
+        self.siwa = siwa
+        if 'tags' in kwargs:
+            self.tags = kwargs.pop('tags')
+        if 'group' in kwargs:
+            self.group = kwargs.pop('group')
+
+        super().__init__(*args, **kwargs)
+
+    def route(self,
+              rule,
+              *,
+              query: Optional[Type[BaseModel]] = None,
+              header: Optional[Type[BaseModel]] = None,
+              cookie: Optional[Type[BaseModel]] = None,
+              body: Optional[Type[BaseModel]] = None,
+              form: Optional[Type[BaseModel]] = None,
+              files=None,
+              resp=None,
+              x=[],
+              tags=[],
+              group=None,
+              summary=None,
+              description=None,
+              ignore=False,
+              **options: Any) -> Callable[[T_route], T_route]:
+
+        # 忽略不使用 siwadoc 的接口
+        if ignore:
+            return super().route(rule, **options)
+
+        def decorator(func) -> T_route:
+            view_func = self.siwa.doc(query,
+                                      header,
+                                      cookie,
+                                      body,
+                                      form,
+                                      files,
+                                      resp,
+                                      x,
+                                      tags or self.tags,
+                                      group or self.group,
+                                      summary,
+                                      description)(func)
+            view = self.__blueprint_route(view_func, rule, **options)
+
+            @wraps
+            def inner(*args, **kwargs):
+                return view(*args, **kwargs)
+
+            return inner
+
+        return decorator
+
+    def __blueprint_route(self, view_func, rule, **options):
+        return super().route(rule, **options)(view_func)
