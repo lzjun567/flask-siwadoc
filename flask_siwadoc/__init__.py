@@ -7,7 +7,8 @@ from flask import Blueprint, request, Flask, render_template
 from flask import jsonify
 from pydantic import BaseModel
 from pydantic.typing import Literal
-
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_httpauth import HTTPBasicAuth
 from . import utils, openapi, error
 from .error import ValidationError
 from pydantic import ValidationError as PydanticError
@@ -17,9 +18,19 @@ import uuid
 
 __all__ = ["SiwaDoc", "ValidationError"]
 
-__version__ = "0.2.0"
+__version__ = "0.2.2"
 
 SUPPORTED_UI = ('redoc', 'swagger', 'rapidoc')
+
+auth = HTTPBasicAuth()
+users = dict()
+
+
+@auth.verify_password
+def verify_password(username, password):
+    if username in users and \
+            check_password_hash(users.get(username), password):
+        return username
 
 
 class SiwaDoc:
@@ -60,6 +71,26 @@ class SiwaDoc:
 
         @siwa_bp.route(self.doc_url)
         def doc_html():
+            siwa_user = self.app.config.get("SIWA_USER")
+            siwa_pass = self.app.config.get("SIWA_PASSWORD")
+            if siwa_user and siwa_pass:
+                global users
+                users = {
+                    siwa_user: generate_password_hash(siwa_pass),
+                }
+                login_info = auth.get_auth()
+                password = auth.get_auth_password(login_info)
+                status = None
+                user = auth.authenticate(login_info, password)
+                if user in (False, None):
+                    status = 401
+                elif not auth.authorize(None, user, auth):
+                    status = 403
+                if status:
+                    try:
+                        return auth.auth_error_callback(status)
+                    except TypeError:
+                        return auth.auth_error_callback()
             ui = request.args.get("ui") or self.ui
             assert ui in SUPPORTED_UI, f"ui only support with {SUPPORTED_UI}"
             ui_file = f'{ui}.html'
@@ -144,10 +175,14 @@ class SiwaDoc:
                             is_single_file_ = file_conf.get('single', True)
                             file_list = request_files.getlist(file_field)
                             if is_required_ and not file_list:
-                                raise ValidationError(PydanticError(errors=[ErrorWrapper(exc=MissingError(), loc=(file_field,))], model=form_model))
+                                raise ValidationError(
+                                    PydanticError(errors=[ErrorWrapper(exc=MissingError(), loc=(file_field,))],
+                                                  model=form_model))
 
                             if file_list and is_single_file_ and len(file_list) > 1:
-                                raise ValidationError(PydanticError(errors=[ErrorWrapper(exc=ListMaxLengthError(limit_value=1), loc=(file_field,))], model=form_model))
+                                raise ValidationError(PydanticError(
+                                    errors=[ErrorWrapper(exc=ListMaxLengthError(limit_value=1), loc=(file_field,))],
+                                    model=form_model))
 
                             if file_list:
                                 files_data[file_field] = file_list[0] if is_single_file_ else file_list
@@ -178,7 +213,8 @@ class SiwaDoc:
                             if is_single_file:
                                 file_schema = {'title': field, 'type': 'string', 'format': 'binary'}
                             else:
-                                file_schema = {'title': field, 'type': 'array', 'items': {'type': 'string', 'format': 'binary'}}
+                                file_schema = {'title': field, 'type': 'array',
+                                               'items': {'type': 'string', 'format': 'binary'}}
                             schema['properties'][field] = file_schema
 
                             is_required = conf.get('required', False)

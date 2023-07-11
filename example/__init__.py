@@ -153,6 +153,10 @@ class TestView(MethodView):
 
 
 app.add_url_rule('/counter', view_func=TestView.as_view('counter'))
+# app.config.update({"SIWA_PASSWORD": "admin"})
+# app.config.update({"SIWA_USER": "admin"})
+print(app.config)
 
 if __name__ == '__main__':
+    print("yyyy")
     app.run()

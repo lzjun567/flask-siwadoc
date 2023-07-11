@@ -22,6 +22,14 @@ flask-siwadoc内置了`swagger`（默认）、`redoc`、`rapidoc`等多种UI界�
 
 ### 5、支持标签与分组
 
+### 6、可设置访问权限
+
+配置参数：
+* SIWA_USER：登录用户名
+* SIWA_PASSWORD: 登录密码
+
+只有同时设置了用户名和密码访问文档才需要登录权限，该场景用在正式环境中，防止接口文档被匿名访问
+
 ## 安装
 
 ```
@@ -330,4 +338,6 @@ reference
 3. https://github.com/bauerji/flask-pydantic
 4. https://github.com/kemingy/flaskerk
 
-任何问题欢迎发issue或者加我微信 lzjun567 交流，欢迎PR
+任何问题欢迎发issue或者加我微信 lzjun567 交流，欢迎PR， 如果对你有帮助或者给你的工作带来了极大的便利，可考虑赞赏作者
+
+![赞赏](./screnshots/6802366f4419fd9db9fb3c730f873d2.jpg)
