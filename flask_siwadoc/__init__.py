@@ -1,24 +1,23 @@
 import os
 from functools import wraps
-from typing import Optional, Type, Dict
+from typing import Optional, Type, Dict, Literal
 
 import pydantic
 from flask import Blueprint, request, Flask, render_template
 from flask import jsonify
 from pydantic import BaseModel
-from pydantic.typing import Literal
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_httpauth import HTTPBasicAuth
 from . import utils, openapi, error
 from .error import ValidationError
 from pydantic import ValidationError as PydanticError
-from pydantic.errors import MissingError, ListMaxLengthError
-from pydantic.error_wrappers import ErrorWrapper
+from pydantic.errors import PydanticUserError
+from pydantic.v1.error_wrappers import ErrorWrapper
 import uuid
 
 __all__ = ["SiwaDoc", "ValidationError"]
 
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 
 SUPPORTED_UI = ('redoc', 'swagger', 'rapidoc')
 
@@ -115,6 +114,7 @@ class SiwaDoc:
 
     def doc(self,
             query: Optional[Type[BaseModel]] = None,
+            param: Optional[Type[BaseModel]] = None,
             header: Optional[Type[BaseModel]] = None,
             cookie: Optional[Type[BaseModel]] = None,
             body: Optional[Type[BaseModel]] = None,
@@ -130,7 +130,8 @@ class SiwaDoc:
         """
         装饰器同时兼具文档生成和请求数据校验功能
         """
-
+        if not query:
+            query = param
         # 当formdata中有文件时，将文件参数添加到form schema中。需要将form动态创建一个子类，保证schema不冲突。
         if files and form:
             form = type(f'{form.__name__}-{uuid.uuid1()}', (form,), {})
@@ -140,7 +141,7 @@ class SiwaDoc:
             def wrapper(*args, **kwargs):
                 query_data, body_data, form_data, files_data = None, None, None, None
                 # 注解参数
-                query_in_kwargs = func.__annotations__.get("query")
+                query_in_kwargs = func.__annotations__.get("query") or func.__annotations__.get("param")
                 body_in_kwargs = func.__annotations__.get("body")
                 form_in_kwargs = func.__annotations__.get("form")
                 files_in_kwargs = func.__annotations__.get("files")
@@ -176,12 +177,12 @@ class SiwaDoc:
                             file_list = request_files.getlist(file_field)
                             if is_required_ and not file_list:
                                 raise ValidationError(
-                                    PydanticError(errors=[ErrorWrapper(exc=MissingError(), loc=(file_field,))],
+                                    PydanticError(errors=[ErrorWrapper(exc=PydanticUserError(), loc=(file_field,))],
                                                   model=form_model))
 
                             if file_list and is_single_file_ and len(file_list) > 1:
                                 raise ValidationError(PydanticError(
-                                    errors=[ErrorWrapper(exc=ListMaxLengthError(limit_value=1), loc=(file_field,))],
+                                    errors=[ErrorWrapper(exc=PydanticUserError(limit_value=1), loc=(file_field,))],
                                     model=form_model))
 
                             if file_list:

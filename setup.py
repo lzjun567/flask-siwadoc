@@ -55,7 +55,7 @@ setup(
     },
     include_package_data=True,
     license='MIT License',
-    python_requires=">=3.6",
+    python_requires=">=3.10",
     install_requires=list(get_install_requires()),
     setup_requires=[
         'pytest-runner',

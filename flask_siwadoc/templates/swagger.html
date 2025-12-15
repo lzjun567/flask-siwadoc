@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <title>Swagger UI</title>
-        <link rel="stylesheet" type="text/css" href="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/swagger-ui/3.52.4/swagger-ui.min.css" >
+        <link rel="stylesheet" type="text/css" href="https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/swagger-ui/5.9.0/swagger-ui.min.css" >
         <style>
         html
         {
@@ -31,8 +31,7 @@
     <body>
         <div id="swagger-ui"></div>
 
-        <script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/swagger-ui/3.52.4/swagger-ui-bundle.js"> </script>
-        <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/swagger-ui/3.52.4/swagger-ui-standalone-preset.min.js"> </script>
+        <script src="https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/swagger-ui/5.9.0/swagger-ui-bundle.min.js"> </script>
         <script>
         window.onload = function() {
         // Begin Swagger UI call region
@@ -42,12 +41,10 @@
             deepLinking: true,
             presets: [
             SwaggerUIBundle.presets.apis,
-            SwaggerUIStandalonePreset
             ],
             plugins: [
             SwaggerUIBundle.plugins.DownloadUrl
-            ],
-            layout: "StandaloneLayout"
+            ]
         })
         // End Swagger UI call region
 

@@ -3,7 +3,7 @@ import re
 from typing import Type, List, Mapping, Any
 
 from pydantic import BaseModel
-from pydantic.typing import Literal
+from typing import Literal
 from werkzeug.datastructures import MultiDict
 
 from . import schema
