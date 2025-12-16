@@ -151,22 +151,13 @@ class SiwaDoc:
 
                 if query_model:
                     query_params = utils.convert_query_params(request.args, query_model)
-                    try:
-                        query_data = query_model(**query_params)
-                    except pydantic.error_wrappers.ValidationError as e:
-                        raise ValidationError(e)
+                    query_data = query_model(**query_params)
 
                 if body_model is not None:
-                    try:
-                        body_data = body_model(**(request.get_json(force=True, silent=True) or {}))
-                    except pydantic.error_wrappers.ValidationError as e:
-                        raise ValidationError(e)
+                    body_data = body_model(**(request.get_json(force=True, silent=True) or {}))
 
                 if form_model:
-                    try:
-                        form_data = form_model(**request.form)
-                    except pydantic.error_wrappers.ValidationError as e:
-                        raise ValidationError(e)
+                    form_data = form_model(**request.form)
 
                     if files:
                         request_files = request.files
@@ -176,14 +167,13 @@ class SiwaDoc:
                             is_single_file_ = file_conf.get('single', True)
                             file_list = request_files.getlist(file_field)
                             if is_required_ and not file_list:
-                                raise ValidationError(
-                                    PydanticError(errors=[ErrorWrapper(exc=PydanticUserError(), loc=(file_field,))],
-                                                  model=form_model))
+                                raise PydanticError(errors=[ErrorWrapper(exc=PydanticUserError(), loc=(file_field,))],
+                                                    model=form_model)
 
                             if file_list and is_single_file_ and len(file_list) > 1:
-                                raise ValidationError(PydanticError(
+                                raise PydanticError(
                                     errors=[ErrorWrapper(exc=PydanticUserError(limit_value=1), loc=(file_field,))],
-                                    model=form_model))
+                                    model=form_model)
 
                             if file_list:
                                 files_data[file_field] = file_list[0] if is_single_file_ else file_list
