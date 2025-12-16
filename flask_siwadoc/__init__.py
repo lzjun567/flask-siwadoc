@@ -17,7 +17,7 @@ import uuid
 
 __all__ = ["SiwaDoc", "ValidationError"]
 
-__version__ = "0.2.3"
+__version__ = "0.2.4"
 
 SUPPORTED_UI = ('redoc', 'swagger', 'rapidoc')
 
